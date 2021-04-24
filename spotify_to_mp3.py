@@ -8,6 +8,13 @@ import youtube_dl
 from youtube_search import YoutubeSearch
 from fuzzywuzzy import fuzz
 
+import glob
+import shutil
+
+mp3_path='/media/jscardin/C0BA-D6E9/'
+
+
+
 # **************PLEASE READ THE README.md FOR USE INSTRUCTIONS**************
 
 def generate_token(client_id: str, client_secret: str):
@@ -59,21 +66,19 @@ def write_playlist(username: str, playlist_id: str):
 
 
 def find_and_download_songs(reference_file: str):
-    global a
-    dir_content=os.listdir()
+    global best_url,results_list,text_to_search
+    dir_content=os.listdir(mp3_path)
     TOTAL_ATTEMPTS = 10
     with open(reference_file, "r", encoding='utf-8') as file:
         for line in file:
             temp = line.split(",")
             name, artist = temp[0], temp[1]
-            if any([fuzz.ratio(artist+" "+name,a)>20 for a in dir_content]): 
-                #print('file ',name,' already in')
-                continue
-            else:
-                print('file ',name,'not in ')
+            # if any([fuzz.ratio(artist+" "+name,a)>20 for a in dir_content]): 
             text_to_search = artist + " - " + name
-            print(artist,'zxcvzxcvxzcv',name)
-            asdf
+            text_to_search=text_to_search.replace('/','-')
+            if any([text_to_search in a for a in dir_content]):
+                 print("SKIP: ",text_to_search)
+                 continue
             best_url = None
             attempts_left = TOTAL_ATTEMPTS
             while attempts_left > 0:
@@ -90,7 +95,7 @@ def find_and_download_songs(reference_file: str):
                 print("No valid URLs found for {}, skipping track.".format(text_to_search))
                 continue
             # Run you-get to fetch and download the link's audio
-            print("Initiating download for {}.".format(text_to_search))
+            print("DL:   ",format(text_to_search))
             ydl_opts = {
                 'format': 'bestaudio/best',
                 'postprocessors': [{
@@ -99,15 +104,17 @@ def find_and_download_songs(reference_file: str):
                     'preferredquality': '192',
                 }],
             }
+            
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([best_url])
-
+            list_of_files = glob.glob('*') # * means all if need specific format then *.csv
+            latest_file = max(list_of_files, key=os.path.getctime)
+            shutil.copy(latest_file,mp3_path+text_to_search+'.mp3')
 
 if __name__ == "__main__":
     # Parameters
     
     #https://open.spotify.com/playlist/0hCOjcbWg33xXRk2RnIFc9?si=3eaed9adf09d4860
-    print("Please read README.md for use instructions.")
     client_id = "ad21eeb11e544e049cc4f18b809a5407" #input("Client ID: ")
     client_secret = "0e3d25a97777486693f26a48d954ddb1" #input("Client secret: ")
     username = "9uftjfidtv074b3yj6oebs4ez"  #input("Spotify username: ")
