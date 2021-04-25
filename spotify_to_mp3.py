@@ -66,7 +66,7 @@ def write_playlist(username: str, playlist_id: str):
 
 
 def find_and_download_songs(reference_file: str):
-    global best_url,results_list,text_to_search
+    global best_url,results_list,text_to_search,dir_content
     dir_content=os.listdir(mp3_path)
     TOTAL_ATTEMPTS = 10
     with open(reference_file, "r", encoding='utf-8') as file:
@@ -76,9 +76,12 @@ def find_and_download_songs(reference_file: str):
             # if any([fuzz.ratio(artist+" "+name,a)>20 for a in dir_content]): 
             text_to_search = artist + " - " + name
             text_to_search=text_to_search.replace('/','-')
-            if any([text_to_search in a for a in dir_content]):
-                 print("SKIP: ",text_to_search)
-                 continue
+            a=[a[0] for a in enumerate(dir_content) if text_to_search in a[1]]
+            if len(a):
+                print("SKIP: ",text_to_search)
+                dir_content.pop(a[0])
+                continue
+            print('text_to_search')
             best_url = None
             attempts_left = TOTAL_ATTEMPTS
             while attempts_left > 0:
@@ -109,8 +112,13 @@ def find_and_download_songs(reference_file: str):
                 ydl.download([best_url])
             list_of_files = glob.glob('*') # * means all if need specific format then *.csv
             latest_file = max(list_of_files, key=os.path.getctime)
-            shutil.copy(latest_file,mp3_path+text_to_search+'.mp3')
-
+            os.rename(latest_file,text_to_search+'.mp3')
+            shutil.copy(text_to_search+'.mp3',mp3_path+text_to_search+'.mp3')
+    for file in dir_content:
+        print('REMOVING: ',file)
+        os.remove(mp3_path+file)
+            
+            
 if __name__ == "__main__":
     # Parameters
     
