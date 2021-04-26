@@ -81,14 +81,14 @@ def find_and_download_songs(reference_file: str):
                 print("SKIP: ",text_to_search)
                 dir_content.pop(a[0])
                 continue
-            print('text_to_search')
             best_url = None
             attempts_left = TOTAL_ATTEMPTS
             while attempts_left > 0:
                 try:
-                    results_list = YoutubeSearch(text_to_search, max_results=1).to_dict()
-                    a=results_list
-                    best_url = "https://www.youtube.com{}".format(results_list[0]['url_suffix'])
+                    results_list = YoutubeSearch(text_to_search, max_results=3).to_dict()
+                    for i in range(3):
+                        if 'Full Album' not in results_list[i]['title']: break
+                    best_url = "https://www.youtube.com{}".format(results_list[i]['url_suffix'])
                     break
                 except IndexError:
                     attempts_left -= 1
